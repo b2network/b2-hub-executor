@@ -8,6 +8,12 @@ GOBIN = ./build/bin
 GO ?= latest
 GORUN = go run
 
+COMMITID=$(shell git log -1 --format='%h')
+BRANCH=$(shell git branch --show-current)
+IMAGE_REPO=ghcr.io/b2network/b2-hub-executor
+IMAGE_TAG=${IMAGE_REPO}:${BRANCH}-${COMMITID}
+
+
 #? geth: Build geth
 geth:
 	$(GORUN) build/ci.go install ./cmd/geth
@@ -30,6 +36,11 @@ lint: ## Run linters.
 clean:
 	go clean -cache
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*
+
+image-build: ## Builds a docker image with the node binary
+	docker build -t ${IMAGE_TAG} -f ./Dockerfile .
+image-push: ## Builds a docker image with the node binary
+	docker push --all-tags ${IMAGE_REPO}
 
 # The devtools target installs tools required for 'go generate'.
 # You need to put $GOBIN (or $GOPATH/bin) in your PATH to use 'go generate'.
