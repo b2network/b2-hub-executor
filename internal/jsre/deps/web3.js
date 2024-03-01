@@ -7905,7 +7905,7 @@ module.exports = transfer;
 	     * Local polyfil of Object.create
 	     */
 	    var create = Object.create || (function () {
-	        function F() {}
+	        function F() {};
 
 	        return function (obj) {
 	            var subtype;
