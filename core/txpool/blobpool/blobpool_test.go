@@ -378,7 +378,7 @@ func TestOpenDrops(t *testing.T) {
 		id, _ := store.Put(blob)
 		dangling[id] = struct{}{}
 	}
-	// Insert a sequence of transactions with already passed nonces to veirfy
+	// Insert a sequence of transactions with already passed nonces to verify
 	// that the entire set will get dropped (case 4).
 	var (
 		filler, _ = crypto.GenerateKey()
