@@ -34,7 +34,7 @@ func TestTransaction(t *testing.T) {
 	txt.skipLoad("^ttGasLimit/TransactionWithGasLimitxPriceOverflow.json")
 	// We _do_ allow more than uint64 in gas price, as opposed to the tests
 	// This is also not a concern, as long as tx.Cost() uses big.Int for
-	// calculating the final cozt
+	// calculating the final cost
 	txt.skipLoad(".*TransactionWithGasPriceOverflow.*")
 
 	// The nonce is too large for uint64. Not a concern, it means geth won't

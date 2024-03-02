@@ -38,7 +38,7 @@ type nodeJSON struct {
 	Seq uint64      `json:"seq"`
 	N   *enode.Node `json:"record"`
 
-	// The score tracks how many liveness checks were performed. It is incremented by one
+	// The score tracks how many liveliness checks were performed. It is incremented by one
 	// every time the node passes a check, and halved every time it doesn't.
 	Score int `json:"score,omitempty"`
 	// These two track the time of last successful contact.
