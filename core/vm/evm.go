@@ -137,6 +137,10 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 			blockCtx.BlobBaseFee = new(big.Int)
 		}
 	}
+	
+	// hardcode to enable push0
+	config.ExtraEips = append(config.ExtraEips, 3855)
+
 	evm := &EVM{
 		Context:     blockCtx,
 		TxContext:   txCtx,

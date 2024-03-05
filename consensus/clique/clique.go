@@ -300,7 +300,8 @@ func (c *Clique) verifyHeader(chain consensus.ChainHeaderReader, header *types.H
 		return fmt.Errorf("invalid gasLimit: have %v, max %v", header.GasLimit, params.MaxGasLimit)
 	}
 	if chain.Config().IsShanghai(header.Number, header.Time) {
-		return errors.New("clique does not support shanghai fork")
+		// hardcode comment following code to enable clique for shanghai
+		// return errors.New("clique does not support shanghai fork")
 	}
 	// Verify the non-existence of withdrawalsHash.
 	if header.WithdrawalsHash != nil {
