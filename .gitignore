@@ -50,3 +50,10 @@ profile.cov
 logs/
 
 tests/spec-tests/
+*.log
+*.help
+*.png
+*.puml
+*.svg
+*.pdf
+helper.sh

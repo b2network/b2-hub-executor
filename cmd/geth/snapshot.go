@@ -161,6 +161,18 @@ The export-preimages command exports hash preimages to a flat file, in exactly
 the expected order for the overlay tree migration.
 `,
 			},
+			{
+				Name:      "export-account",
+				Usage:     "export the latest address status",
+				ArgsUsage: "address list",
+				Action:    exportAccount,
+				Flags: []cli.Flag{
+					utils.DataDirFlag,
+				},
+				Description: `
+geth snapshot export-account <addr1 addr2 ...> export the latest address status. 
+`,
+			},
 		},
 	}
 )
@@ -661,6 +673,30 @@ func snapshotExportPreimages(ctx *cli.Context) error {
 	return utils.ExportSnapshotPreimages(chaindb, snaptree, ctx.Args().First(), root)
 }
 
+// exportAccount export the latest address status
+func exportAccount(ctx *cli.Context) error {
+	stack, _ := makeConfigNode(ctx)
+	defer stack.Close()
+	chaindb := utils.MakeChainDatabase(ctx, stack, true)
+	defer chaindb.Close()
+	start := time.Now()
+
+	for _, arg := range ctx.Args().Slice() {
+		addr := common.HexToAddress(arg)
+		hash := crypto.Keccak256Hash(addr.Bytes())
+		// TODO return types.Account
+		err, lastState := snapshot.IterateAccount(chaindb, hash)
+		fmt.Fprintln(os.Stderr, "lastState", lastState)
+		if err != nil {
+			return err
+		}
+		// fmt.Println("addr", addr, "hash", hash)
+	}
+
+	log.Info("export account", "time", common.PrettyDuration(time.Since(start)))
+	return nil
+}
+
 // checkAccount iterates the snap data layers, and looks up the given account
 // across all layers.
 func checkAccount(ctx *cli.Context) error {
@@ -686,7 +722,9 @@ func checkAccount(ctx *cli.Context) error {
 	defer chaindb.Close()
 	start := time.Now()
 	log.Info("Checking difflayer journal", "address", addr, "hash", hash)
-	if err := snapshot.CheckJournalAccount(chaindb, hash); err != nil {
+	err := snapshot.CheckJournalAccount(chaindb, hash)
+	fmt.Fprintln(os.Stderr)
+	if err != nil {
 		return err
 	}
 	log.Info("Checked the snapshot journalled storage", "time", common.PrettyDuration(time.Since(start)))

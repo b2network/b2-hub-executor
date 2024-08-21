@@ -150,3 +150,52 @@ func CheckJournalAccount(db ethdb.KeyValueStore, hash common.Hash) error {
 		return nil
 	})
 }
+
+func IterateAccount(db ethdb.KeyValueStore, hash common.Hash) (error, types.Account) {
+	var lastState types.Account
+	lastState.Storage = make(map[common.Hash]common.Hash)
+
+	if data := rawdb.ReadAccountSnapshot(db, hash); data != nil {
+		account, err := types.FullAccount(data)
+		if err != nil {
+			panic(err)
+		}
+		lastState.Nonce = account.Nonce
+		lastState.Balance = account.Balance.ToBig()
+	}
+
+	// Check storage
+	{
+		it := rawdb.NewKeyLengthIterator(db.NewIterator(append(rawdb.SnapshotStoragePrefix, hash.Bytes()...), nil), 1+2*common.HashLength)
+		for it.Next() {
+			slot := it.Key()[33:]
+			lastState.Storage[common.BytesToHash(slot)] = common.BytesToHash(it.Value())
+		}
+		it.Release()
+	}
+	var depth = 0
+	err := iterateJournal(db, func(pRoot, root common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) error {
+		_, a := accounts[hash]
+		_, b := destructs[hash]
+		_, c := storage[hash]
+		depth++
+		if !a && !b && !c {
+			return nil
+		}
+		if data, ok := accounts[hash]; ok {
+			account, err := types.FullAccount(data)
+			if err != nil {
+				panic(err)
+			}
+			lastState.Nonce = account.Nonce
+			lastState.Balance = account.Balance.ToBig()
+		}
+		if data, ok := storage[hash]; ok {
+			for k, v := range data {
+				lastState.Storage[k] = common.BytesToHash(v)
+			}
+		}
+		return nil
+	})
+	return err, lastState
+}
