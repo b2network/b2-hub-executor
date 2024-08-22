@@ -679,8 +679,13 @@ func exportAccount(ctx *cli.Context) error {
 	stack, _ := makeConfigNode(ctx)
 	defer stack.Close()
 
-	chaindb := utils.MakeChainDatabase(ctx, stack, true)
+	coredb, chaindb := utils.MakeChain(ctx, stack, true)
 	defer chaindb.Close()
+
+	statedb, err := coredb.State()
+	if err != nil {
+		return err
+	}
 
 	start := time.Now()
 
@@ -692,6 +697,8 @@ func exportAccount(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+
+		data.Code = statedb.GetCode(addr)
 		accounts[addr] = data
 	}
 
