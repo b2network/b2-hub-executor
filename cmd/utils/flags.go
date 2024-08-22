@@ -612,6 +612,14 @@ var (
 		TakesFile: true,
 		Category:  flags.MiscCategory,
 	}
+	OutFlag = &cli.StringFlag{
+		Name:      "out",
+		Usage:     `Output file for result`,
+		Value:     "account.json",
+		TakesFile: true,
+		EnvVars:   []string{"GETH_OUT"},
+		Category:  flags.MiscCategory,
+	}
 
 	// RPC settings
 	IPCDisabledFlag = &cli.BoolFlag{

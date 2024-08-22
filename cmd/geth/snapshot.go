@@ -168,6 +168,7 @@ the expected order for the overlay tree migration.
 				Action:    exportAccount,
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
+					utils.OutFlag,
 				},
 				Description: `
 geth snapshot export-account <addr1 addr2 ...> export the latest address status. 
@@ -677,20 +678,30 @@ func snapshotExportPreimages(ctx *cli.Context) error {
 func exportAccount(ctx *cli.Context) error {
 	stack, _ := makeConfigNode(ctx)
 	defer stack.Close()
+
 	chaindb := utils.MakeChainDatabase(ctx, stack, true)
 	defer chaindb.Close()
+
 	start := time.Now()
 
+	var accounts = make(types.GenesisAlloc)
 	for _, arg := range ctx.Args().Slice() {
 		addr := common.HexToAddress(arg)
 		hash := crypto.Keccak256Hash(addr.Bytes())
-		// TODO return types.Account
-		err, lastState := snapshot.IterateAccount(chaindb, hash)
-		fmt.Fprintln(os.Stderr, "lastState", lastState)
+		err, data := snapshot.IterateAccount(chaindb, hash)
 		if err != nil {
 			return err
 		}
-		// fmt.Println("addr", addr, "hash", hash)
+		accounts[addr] = data
+	}
+
+	data, err := json.Marshal(accounts)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(ctx.String(utils.OutFlag.Name), data, 0644); err != nil {
+		return err
 	}
 
 	log.Info("export account", "time", common.PrettyDuration(time.Since(start)))
