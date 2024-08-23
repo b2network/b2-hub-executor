@@ -26,6 +26,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/state/pruner"
@@ -689,7 +690,10 @@ func exportAccount(ctx *cli.Context) error {
 
 	start := time.Now()
 
-	var accounts = make(types.GenesisAlloc)
+	genesis, err := core.ReadGenesis(chaindb)
+	if err != nil {
+		return err
+	}
 	for _, arg := range ctx.Args().Slice() {
 		addr := common.HexToAddress(arg)
 		hash := crypto.Keccak256Hash(addr.Bytes())
@@ -699,10 +703,10 @@ func exportAccount(ctx *cli.Context) error {
 		}
 
 		data.Code = statedb.GetCode(addr)
-		accounts[addr] = data
+		genesis.Alloc[addr] = data
 	}
 
-	data, err := json.Marshal(accounts)
+	data, err := json.Marshal(genesis)
 	if err != nil {
 		return err
 	}
